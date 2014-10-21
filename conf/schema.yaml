@@ -1,0 +1,22 @@
+type:    map
+mapping:
+  "foreman_user":
+    type:     str
+    required: yes
+  "foreman_password":
+    type:     str
+    required: yes
+  "foreman_host":
+    type:     str
+    required: yes
+  "log_level":
+    type:     str
+    required: no
+    pattern:  /^(debug|warn|notice)$/
+  "database_path":
+    type:     str
+    pattern:  /^\//
+    required: no
+  "rename_hook_command":
+    type:     str
+    required: yes

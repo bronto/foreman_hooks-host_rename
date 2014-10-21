@@ -1,0 +1,5 @@
+---
+:foreman_host: 'foreman.acme.com'
+:foreman_user: 'api-user'
+:foreman_password: 'password1'
+:rename_hook_command: '/bin/true'
