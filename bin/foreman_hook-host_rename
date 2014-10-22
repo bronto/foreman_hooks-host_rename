@@ -19,7 +19,7 @@ OptionParser.new do |opts|
   end
 
   opts.on( '--uninstall', 'Install the hook from Foreman') do
-    raise 'Not implemented yet'
+    action = :uninstall
   end
 
   opts.on( '-h', '--help', 'Display this screen' ) do
@@ -32,6 +32,8 @@ hook = ForemanHook::HostRename.new
 case action
 when :install
   hook.install
+when :uninstall
+  hook.uninstall
 when :run
   hook.run
 else

@@ -56,6 +56,7 @@ module ForemanHook
       config = {
           hook_user: 'apache',
           database_path: prefix + '/db/foreman_hook_rename.db',
+          log_path: '/var/tmp/foreman_hook_rename.log',
           log_level: 'warn',
           rename_hook_command: '/bin/true',
       }.merge(symbolize(YAML.load(File.read(conffile))))
@@ -201,7 +202,7 @@ module ForemanHook
     end
 
     def open_logfile
-      @log = Logger.new(STDERR)
+      @log = Logger.new(@log_path, 10, 1024000)
       case @log_level
       when 'debug'
         @log.level = Logger::DEBUG
@@ -219,8 +220,8 @@ module ForemanHook
     def notice(message)   ; @log.notice(message)  ; end
     def warn(message)     ; @log.warn(message)    ; end
     
-    def initialize(opts = nil)
-      if opts[:config]
+    def initialize(opts = {})
+      if opts.has_key? :config
         f = Tempfile.new('hook-settings')
         f.write(opts[:config].to_yaml)
         f.close
@@ -228,17 +229,22 @@ module ForemanHook
       else
         parse_config
       end
-      open_logfile
     end
 
     def run
-      open_database
-      parse_hook_data
-      execute_hook_action
-      execute_rename_action if rename?
+      open_logfile
+      begin
+        open_database
+        parse_hook_data
+        execute_hook_action
+        execute_rename_action if rename?
+      rescue Exception => e  
+        @log.error e.message  
+        @log.error e.backtrace.to_yaml
+      end
     end
 
-    def self.install(hookdir = nil)
+    def install(hookdir = nil)
       hookdir ||= '/usr/share/foreman/config/hooks/host/managed'
       raise "hook directory not found" unless File.exist? hookdir
       %w(create update destroy).each do |event|
@@ -248,8 +254,19 @@ module ForemanHook
         next if File.exist? hook
         FileUtils.ln_s __FILE__, hook
       end
-      confdir = '/etc/foreman_hook-host_rename'
-      Dir.mkdir confdir unless File.exist? confdir
+      sysconfdir = '/etc/foreman_hook-host_rename'
+      Dir.mkdir sysconfdir unless File.exist? sysconfdir
+      puts 'The hook has been installed. Please restart Apache to activate the hook.'
+    end
+
+    def uninstall(hookdir = nil)
+      hookdir ||= '/usr/share/foreman/config/hooks/host/managed'
+      %w(create update destroy).each do |event|
+        hook = "#{hookdir}/#{event}/99_host_rename"
+        #puts "removing #{hook}.."
+        File.unlink hook if File.exist? hook
+      end
+      puts 'The hook has been uninstalled. Please restart Apache to deactivate the hook.'
     end
 
     private

@@ -15,10 +15,17 @@ This hook has only been tested in the following environment:
 Installation
 ============
 
-1. Download the software to a directory on your Foreman server, such as /opt
-1. Create the configuration file in conf/settings.yaml. See the 'Configuration' section for details.
-1. Run 'sudo rake install' to install the hook.
-1. Restart Apache via 'sudo service httpd restart'
+1. Install the gem as root, using the Ruby 1.9 install location:
+
+      sudo scl enable ruby193 'gem install foreman_hook-host_rename'
+
+2. Create a configuration file in /etc/foreman_hook-host_rename/settings.yaml.
+   See the 'Configuration' section for details.
+
+3. Run 'sudo foreman_hook-host_rename --install' to register the hook with
+   Foreman.
+
+4. Restart Apache via 'sudo service httpd restart'
 
 Configuration
 =============
@@ -42,12 +49,21 @@ rename_hook_command
 
 For an example, see conf/settings.yaml.EXAMPLE
 
+Uninstallation
+==============
+
+To remove the hook, perform the following steps:
+
+1. Run 'sudo foreman_hook-host_rename --uninstall' to unregister the hook with
+   Foreman.
+
+2. Restart Apache via 'sudo service httpd restart'
 
 Bugs
 ====
 
- * The 'rake install' task is incomplete and does not work.
- * Log output goes to STDERR instead of a file
+ * Some configuration options are undocumented.
+ * The database and logs are stored in /var/tmp by default.
    
 Copyright
 =========
