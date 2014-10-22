@@ -65,6 +65,15 @@ def parse_config
     end
     raise "Errors in the configuration file"
   end
+
+  check_script @config[:rename_hook_command]
+end
+
+# Do additional sanity checking on a hook script
+def check_script(path)
+  raise "#{path} does not exist" unless File.exist? path
+  raise "#{path} is not executable" unless File.executable? path
+  File.realpath(path)
 end
 
 # Given an absolute [+path+] within the Foreman API, return the full URI
@@ -150,6 +159,8 @@ def rename?
 end
 
 def execute_rename_action
+  raise 'old_name is nil' if @old_name.nil? 
+  raise 'new_name is nil' if @rec['host']['name'].nil?
   cmd = @config[:rename_hook_command] + ' ' + @old_name + ' ' + @rec['host']['name']
   debug "Running the rename hook action: #{cmd}"
   rc = system cmd

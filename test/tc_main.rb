@@ -47,7 +47,7 @@ class TestMain < MiniTest::Test
 
     @db.execute 'delete from host where id = 999999'
 
-    @config[:rename_hook_command] = File.dirname(__FILE__) + '/hook-script.sh'
+    @config[:rename_hook_command] = check_script(File.dirname(__FILE__) + '/hook-script.sh')
 
     # Create a host
     @action = 'create'
