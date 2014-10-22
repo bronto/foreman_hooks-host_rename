@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+#
+
+require 'optparse'
+require 'ostruct'
+require 'foreman_hook/host_rename'
+
+action = :run
+options = OpenStruct.new
+options.verbose = false
+
+OptionParser.new do |opts|
+  opts.on( '--verbose', 'Display extra debugging information') do |arg|
+    options.verbose = true
+  end
+
+  opts.on( '--install', 'Install the hook into Foreman') do
+    action = :install
+  end
+
+  opts.on( '--uninstall', 'Install the hook from Foreman') do
+    raise 'Not implemented yet'
+  end
+
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end.parse!
+
+hook = ForemanHook::HostRename.new
+case action
+when :install
+  hook.install
+when :run
+  hook.run
+else
+  raise ArgumentError, 'Must specify a valid action' if action.nil?
+end
