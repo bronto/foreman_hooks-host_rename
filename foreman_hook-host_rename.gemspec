@@ -12,14 +12,14 @@ Gem::Specification.new do |s|
 
   # Dependencies
   s.required_ruby_version = '>= 1.9.3'
-  %w(json sqlite3 rest_client kwalify).each do |dep| 
+  %w(minitest json sqlite3 rest_client kwalify).each do |dep| 
     s.add_runtime_dependency dep
   end
 
   # If you need to check in files that aren't .rb files, add them here
   s.files        = Dir[
-	"conf/{schema.yaml,settings.yaml.EXAMPLE}",
-	"LICENSE", "*.md", "Gemfile",
+	"conf/{schema.yaml,settings.yaml.EXAMPLE}", "db/.gitignore",
+	"LICENSE", "*.md", "Gemfile", "Gemfile.lock", "*.gemspec",
 	] + Dir.glob("{bin,lib}/**/*")
   s.require_path = 'lib'
 

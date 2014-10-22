@@ -4,3 +4,4 @@ conf/settings.yaml
 .bundle/
 bin/kwalify
 bin/restclient
+test/test.db

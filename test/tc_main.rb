@@ -20,58 +20,76 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-require 'minitest'
+raise 'Unsupported version of Ruby' unless RUBY_VERSION >= '1.9.3'
+
+require 'rubygems'
 require 'minitest/autorun'
+require 'stringio'
 require 'tempfile'
 
-class TestMain < MiniTest::Test
-  require_relative '../bin/host_rename'
+class TestMain < MiniTest::Unit::TestCase
+  require_relative '../lib/foreman_hook/host_rename'
 
   # Wipe the database and reinitialize it
   def test_initialize_database
-    parse_config
-    @config[:log_level] = 'warn'
-    open_logfile
-    dbfile = @config[:database_path]
-    refute dbfile.nil?
-    File.unlink dbfile if File.exist? dbfile
-    initialize_database
+    hook = ForemanHook::HostRename.new
+    hook.log_level = Logger::WARN
+    hook.database_path = File.dirname(__FILE__) + '/test.db'
+    hook.initialize_database
+    File.unlink hook.database_path
   end
 
   # Try all of the supported hook actions
   def test_hook_actions
-    parse_config
-    @config[:log_level] = 'warn'
-    open_logfile
-    open_database
+    
+    hook = ForemanHook::HostRename.new(config: {
+       'foreman_host' => 'dummy',
+       'foreman_user' => 'dummy',
+       'foreman_password' => 'dummy',
+       'database_path' => File.expand_path(File.dirname(__FILE__) + '/test.db'),
+       'rename_hook_command' => File.dirname(__FILE__) + '/hook-script.sh',
+       'log_level' => 'debug',
+    })
 
-    @db.execute 'delete from host where id = 999999'
-
-    @config[:rename_hook_command] = check_script(File.dirname(__FILE__) + '/hook-script.sh')
+    # This would try to connect to Foreman, so make it a NOOP
+    def hook.sync_host_table ; return ; end
 
     # Create a host
-    @action = 'create'
-    @rec = { 'host' => { 'id' => '999999', 'name' => 'foo.example.com'}}
-    execute_hook_action
-    assert_equal(['foo.example.com'], @db.get_first_row('select name from host where id = 999999'))
+    fire(hook, 'create', { 'host' => { 'id' => '999999', 'name' => 'foo.example.com'}})
+    db = hook.instance_variable_get(:@db)
+    assert_equal(['foo.example.com'], db.get_first_row('select name from host where id = 999999'))
 
     # Update the host, without renaming it
-    @action = 'update'
-    execute_hook_action
-    assert_equal(['foo.example.com'], @db.get_first_row('select name from host where id = 999999'))
-    refute(rename?, 'falsely detected that a rename occurred')
+    fire(hook, 'update', { 'host' => { 'id' => '999999', 'name' => 'foo.example.com'}})
+    db = hook.instance_variable_get(:@db)
+    assert_equal(['foo.example.com'], db.get_first_row('select name from host where id = 999999'))
+    refute(hook.rename?, 'falsely detected that a rename occurred')
 
     # Rename the host
-    @action = 'update'
-    @rec = { 'host' => { 'id' => '999999', 'name' => 'bar.example.com'}}
-    execute_hook_action
-    assert_equal(['bar.example.com'], @db.get_first_row('select name from host where id = 999999'))
-    assert(rename?, 'failed to detect that a rename occurred')
-    execute_rename_action
+    fire(hook, 'update', { 'host' => { 'id' => '999999', 'name' => 'bar.example.com'}})
+    db = hook.instance_variable_get(:@db)
+    assert_equal(['bar.example.com'], db.get_first_row('select name from host where id = 999999'))
+    assert(hook.rename?, 'failed to detect that a rename occurred')
+    hook.execute_rename_action
 
     # Destroy the host
-    @action = 'destroy'
-    execute_hook_action
-    assert_equal(nil, @db.get_first_row('select name from host where id = 999999'))
+    fire(hook, 'destroy', { 'host' => { 'id' => '999999', 'name' => 'bar.example.com'}})
+    db = hook.instance_variable_get(:@db)
+    assert_equal(nil, db.get_first_row('select name from host where id = 999999'))
+
+    # Cleanup
+    File.unlink hook.database_path
+  end
+
+  private
+
+  def fire(hook,action,hostobj)
+    old_stdin = $stdin
+    old_argv0 = ARGV[0]
+    ARGV[0] = action
+    $stdin = StringIO.new(hostobj.to_json)
+    hook.run
+    $stdin = old_stdin
+    ARGV[0] = old_argv0
   end
 end

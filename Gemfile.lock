@@ -4,6 +4,7 @@ PATH
     foreman_hook-host_rename (0.0.1)
       json
       kwalify
+      minitest
       rest_client
       sqlite3
 
@@ -12,6 +13,7 @@ GEM
   specs:
     json (1.8.1)
     kwalify (0.7.2)
+    minitest (2.5.1)
     netrc (0.7.9)
     rest_client (1.7.3)
       netrc (~> 0.7.7)

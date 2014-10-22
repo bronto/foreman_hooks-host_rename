@@ -1,7 +1,7 @@
 require 'rake/testtask'
 
 Rake::TestTask.new do |t|
-  t.libs << "test"
+  t.libs << "lib"
   t.test_files = FileList['test/tc_*.rb']
   t.verbose = true
 end
@@ -11,7 +11,7 @@ task :clean do
 end
 
 task :build do
-  sh 'ls *.gem >/dev/null || gem build *.gemspec'
+  sh 'gem build *.gemspec' if Dir.glob('*.gem').empty?
 end
 
 task :install => [:build] do
@@ -23,4 +23,5 @@ end
 task :deploy do
   sh "rake clean build"
   sh "sudo scl enable ruby193 'rake install'"
+  sh "sudo scl enable ruby193 '/usr/bin/foreman_hook-host_rename --install'"
 end

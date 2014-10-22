@@ -21,9 +21,10 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+raise 'Unsupported version of Ruby' unless RUBY_VERSION >= '1.9.3'
+
 module ForemanHook
   class HostRename
-    require 'bundler/setup'
     require 'fileutils'
     require 'json'
     require 'logger'
@@ -33,6 +34,8 @@ module ForemanHook
     require 'pp'
     require 'yaml'
     
+    attr_accessor :database_path
+
     # Given a nested hash, convert all keys from String to Symbol type
     # Based on http://stackoverflow.com/questions/800122/best-way-to-convert-strings-to-symbols-in-hash
     #
@@ -43,17 +46,22 @@ module ForemanHook
     end
     
     # Parse the configuration file
-    def parse_config
-      prefix = File.realpath(File.dirname(__FILE__) + '/../../')
-      confdir = "#{prefix}/conf"
-      conffile = "#{confdir}/settings.yaml"
-      raise "Configuration file #{conffile} does not exist" unless File.exist? conffile
+    def parse_config(conffile = nil)
+      conffile ||= Dir.glob([
+	  "/etc/foreman_hook-host_rename/settings.yaml",
+	  "#{confdir}/settings.yaml"])[0]
+      raise "Could not locate the configuration file" if conffile.nil?
     
       # Parse the configuration file
-      @config = {
+      config = {
+          hook_user: 'apache',
           database_path: prefix + '/db/foreman_hook_rename.db',
-          log_level: 'warn'
+          log_level: 'warn',
+          rename_hook_command: '/bin/true',
       }.merge(symbolize(YAML.load(File.read(conffile))))
+      config.each do |k,v|
+        instance_variable_set("@#{k}",v)
+      end
     
       # Validate the schema
       document = Kwalify::Yaml.load_file(conffile)
@@ -68,9 +76,15 @@ module ForemanHook
         raise "Errors in the configuration file"
       end
     
-      check_script @config[:rename_hook_command]
+      check_script @rename_hook_command
     end
     
+    # Do additional sanity checking on the database path
+    def validate_database
+      db = @database_path
+      raise "bad mode of #{db}" unless File.world_readable?(db).nil?
+    end
+
     # Do additional sanity checking on a hook script
     def check_script(path)
       raise "#{path} does not exist" unless File.exist? path
@@ -79,42 +93,48 @@ module ForemanHook
     end
     
     # Given an absolute [+path+] within the Foreman API, return the full URI
-    def foreman_api(path)
+    def foreman_uri(path)
       raise ArgumentError, 'path must start with a /' unless path =~ /^\//
-      ['https://', @config[:foreman_user], ':', @config[:foreman_password], '@',
-       @config[:foreman_host], '/api/v2', path].join('')
+      ['https://', @foreman_user, ':', @foreman_password, '@',
+       @foreman_host, '/api/v2', path].join('')
     end
     
+    # Get all the host IDs and FQDNs and populate the host table
+    def sync_host_table
+      uri = foreman_uri('/hosts?per_page=9999999')
+      debug "Loading hosts from #{uri}"
+      json = RestClient.get uri
+      debug "Got JSON: #{json}"
+      JSON.parse(json)['results'].each do |rec|
+        @db.execute "insert into host (id,name) values ( ?, ? )",
+                   rec['id'], rec['name']
+      end
+    end
+
     # Initialize an empty database
     def initialize_database
-      @db = SQLite3::Database.new @config[:database_path]
+      @db = SQLite3::Database.new @database_path
+      File.chmod 0600, @database_path
       begin
-        rows = @db.execute <<-SQL
+        @db.execute 'drop table if exists host;'
+        @db.execute <<-SQL
             create table host (
               id INT,
               name varchar(254)
             );
         SQL
-    
-        # Get all the host IDs and FQDNs and populate the host table
-        uri = foreman_api('/hosts?per_page=9999999')
-        debug "Loading hosts from #{uri}"
-        json = RestClient.get uri
-        debug "Got JSON: #{json}"
-        JSON.parse(json)['results'].each do |rec|
-          @db.execute "insert into host (id,name) values ( ?, ? )",
-                     rec['id'], rec['name']
-        end
+        sync_host_table
       rescue
-        File.unlink @config[:database_path]
+        File.unlink @database_path
         raise
       end
     end
     
     # Open a database connection. If the database does not exist, initialize it.
     def open_database
-      if File.exist? @config[:database_path]
-        @db = SQLite3::Database.new @config[:database_path]
+      if File.exist? @database_path
+        validate_database
+        @db = SQLite3::Database.new @database_path
       else
         initialize_database
       end
@@ -163,7 +183,7 @@ module ForemanHook
     def execute_rename_action
       raise 'old_name is nil' if @old_name.nil? 
       raise 'new_name is nil' if @rec['host']['name'].nil?
-      cmd = @config[:rename_hook_command] + ' ' + @old_name + ' ' + @rec['host']['name']
+      cmd = @rename_hook_command + ' ' + @old_name + ' ' + @rec['host']['name']
       debug "Running the rename hook action: #{cmd}"
       rc = system cmd
       warn 'The rename hook returned a non-zero status code' unless rc
@@ -171,13 +191,18 @@ module ForemanHook
     
     def parse_hook_data
       @action = ARGV[0]   # one of: create, update, destroy
-      @rec = JSON.parse STDIN.read
+      @rec = JSON.parse $stdin.read
       debug "action=#{@action} rec=#{@rec.inspect}"
     end
     
+    def log_level=(level)
+      @log_level = level
+      @log.level = level
+    end
+
     def open_logfile
       @log = Logger.new(STDERR)
-      case @config[:log_level]
+      case @log_level
       when 'debug'
         @log.level = Logger::DEBUG
       when 'warn'
@@ -194,19 +219,26 @@ module ForemanHook
     def notice(message)   ; @log.notice(message)  ; end
     def warn(message)     ; @log.warn(message)    ; end
     
-    def initialize
-      parse_config
+    def initialize(opts = nil)
+      if opts[:config]
+        f = Tempfile.new('hook-settings')
+        f.write(opts[:config].to_yaml)
+        f.close
+        parse_config(f.path)
+      else
+        parse_config
+      end
       open_logfile
-      open_database
     end
 
     def run
+      open_database
       parse_hook_data
       execute_hook_action
       execute_rename_action if rename?
     end
 
-    def install(hookdir = nil)
+    def self.install(hookdir = nil)
       hookdir ||= '/usr/share/foreman/config/hooks/host/managed'
       raise "hook directory not found" unless File.exist? hookdir
       %w(create update destroy).each do |event|
@@ -216,6 +248,18 @@ module ForemanHook
         next if File.exist? hook
         FileUtils.ln_s __FILE__, hook
       end
+      confdir = '/etc/foreman_hook-host_rename'
+      Dir.mkdir confdir unless File.exist? confdir
+    end
+
+    private
+  
+    def prefix
+      @prefix ||= File.realpath(File.dirname(__FILE__) + '/../../')
+    end
+
+    def confdir
+      @confdir ||= "#{prefix}/conf"
     end
   end
 end

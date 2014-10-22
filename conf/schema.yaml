@@ -9,6 +9,9 @@ mapping:
   "foreman_host":
     type:     str
     required: yes
+  "hook_user":
+    type:     str
+    required: no
   "log_level":
     type:     str
     required: no
