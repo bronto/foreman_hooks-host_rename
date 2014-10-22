@@ -1,3 +1,6 @@
 conf/settings.yaml
 .idea/
 *.gem
+.bundle/
+bin/kwalify
+bin/restclient
