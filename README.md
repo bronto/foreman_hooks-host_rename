@@ -47,6 +47,7 @@ Bugs
 ====
 
  * The 'rake install' task is incomplete and does not work.
+ * Log output goes to STDERR instead of a file
    
 Copyright
 =========

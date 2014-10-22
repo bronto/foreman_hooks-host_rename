@@ -122,7 +122,11 @@ def execute_hook_action
   when 'update'
     # Check if we are renaming the host
     @old_name = @db.get_first_row('select name from host where id = ?', id)[0]
-    @rename = @old_name != name
+    if @old_name.nil?
+      warn 'received an update for a non-existent host'
+    else
+      @rename = @old_name != name
+    end
     debug "checking for a rename: old=#{@old_name} new=#{name} rename?=#{@rename}"
 
     sql = 'update host set name = ? where id = ?'

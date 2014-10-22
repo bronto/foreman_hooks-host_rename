@@ -47,18 +47,7 @@ class TestMain < MiniTest::Test
 
     @db.execute 'delete from host where id = 999999'
 
-    # Create a hook script
-    hookfile = Tempfile.new('hook-script')
-    @config[:rename_hook_command] = hookfile.path
-    hookfile.write "#!/bin/sh -e
-#echo renaming $1 to $2
-test $1 = 'foo.example.com'
-test $2 = 'bar.example.com'
-exit 0
-"
-    hookfile.close
-
-    File.chmod 0755, hookfile.path
+    @config[:rename_hook_command] = File.dirname(__FILE__) + '/hook-script.sh'
 
     # Create a host
     @action = 'create'
