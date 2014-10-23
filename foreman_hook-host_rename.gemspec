@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = "foreman_hook-host_rename"
-  s.version     = '0.0.1'
+  s.version     = '0.0.2'
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Mark Heily", "Bronto Software, Inc."]
   s.email       = ["mark.heily@bronto.com"]

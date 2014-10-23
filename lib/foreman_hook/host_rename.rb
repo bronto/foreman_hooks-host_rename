@@ -54,7 +54,7 @@ module ForemanHook
     
       # Parse the configuration file
       config = {
-          hook_user: 'apache',
+          hook_user: 'foreman',
           database_path: prefix + '/db/foreman_hook_rename.db',
           log_path: '/var/tmp/foreman_hook_rename.log',
           log_level: 'warn',
@@ -88,9 +88,10 @@ module ForemanHook
 
     # Do additional sanity checking on a hook script
     def check_script(path)
-      raise "#{path} does not exist" unless File.exist? path
-      raise "#{path} is not executable" unless File.executable? path
-      File.realpath(path)
+      binary=path.split(' ')[0]
+      raise "#{path} does not exist" unless File.exist? binary
+      raise "#{path} is not executable" unless File.executable? binary
+      path
     end
     
     # Given an absolute [+path+] within the Foreman API, return the full URI
@@ -252,7 +253,11 @@ module ForemanHook
         raise "path not found: #{path}" unless File.exist? path
         hook = "#{path}/99_host_rename"
         next if File.exist? hook
-        FileUtils.ln_s __FILE__, hook
+        f = File.open(hook, 'w')
+        f.puts '#!/bin/sh'
+        f.puts 'scl enable ruby193 "/usr/bin/foreman_hook-host_rename $*"'
+        f.close
+        File.chmod 0755, hook
       end
       sysconfdir = '/etc/foreman_hook-host_rename'
       Dir.mkdir sysconfdir unless File.exist? sysconfdir
