@@ -1,5 +1,5 @@
+require 'bundler/gem_tasks'
 require 'rake/testtask'
-require 'rake/packagetask'
 
 ROOT_DIR = File.dirname(__FILE__)
 gemspec = Gem::Specification.load("#{Dir.glob(ROOT_DIR + '/*.gemspec')[0]}")
@@ -10,12 +10,7 @@ Rake::TestTask.new do |t|
   t.verbose = true
 end
 
-Rake::PackageTask.new(gemspec.name, gemspec.version.to_s) do |pkg|
-  pkg.need_tar_bz2 = pkg.need_zip = true
-  pkg.package_files = gemspec.files
-end
-
-task :install => [:build] do
+task :install do
   system 'gem uninstall foreman_hook-host_rename >/dev/null 2>&1'
   sh 'gem install --bindir=/usr/bin --no-rdoc --no-ri *.gem'
   sh 'gem contents foreman_hook-host_rename'
