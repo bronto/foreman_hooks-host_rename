@@ -1,4 +1,8 @@
+require 'bundler/gem_tasks'
 require 'rake/testtask'
+
+ROOT_DIR = File.dirname(__FILE__)
+gemspec = Gem::Specification.load("#{Dir.glob(ROOT_DIR + '/*.gemspec')[0]}")
 
 Rake::TestTask.new do |t|
   t.libs << "lib"
@@ -6,15 +10,7 @@ Rake::TestTask.new do |t|
   t.verbose = true
 end
 
-task :clean do
-  sh 'rm -f *.gem'
-end
-
-task :build do
-  sh 'gem build *.gemspec' if Dir.glob('*.gem').empty?
-end
-
-task :install => [:build] do
+task :install do
   system 'gem uninstall foreman_hook-host_rename >/dev/null 2>&1'
   sh 'gem install --bindir=/usr/bin --no-rdoc --no-ri *.gem'
   sh 'gem contents foreman_hook-host_rename'

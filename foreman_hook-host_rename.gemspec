@@ -1,8 +1,8 @@
-#require File.expand_path("../lib/newgem/version", __FILE__)
+require File.expand_path("../lib/foreman_hook/version", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "foreman_hook-host_rename"
-  s.version     = '0.0.2'
+  s.version     = ForemanHook::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Mark Heily", "Bronto Software, Inc."]
   s.email       = ["mark.heily@bronto.com"]
@@ -15,6 +15,9 @@ Gem::Specification.new do |s|
   %w(minitest json sqlite3 rest_client kwalify).each do |dep| 
     s.add_runtime_dependency dep
   end
+
+  s.add_development_dependency "bundler", "~> 1.7"
+  s.add_development_dependency "rake", "~> 10.0"
 
   # If you need to check in files that aren't .rb files, add them here
   s.files        = Dir[

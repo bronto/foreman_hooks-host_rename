@@ -2,3 +2,5 @@ conf/settings.yaml
 .idea/
 *.gem
 .bundle/
+pkg/
+
