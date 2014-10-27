@@ -1,4 +1,8 @@
 require 'rake/testtask'
+require 'rake/packagetask'
+
+ROOT_DIR = File.dirname(__FILE__)
+gemspec = Gem::Specification.load("#{Dir.glob(ROOT_DIR + '/*.gemspec')[0]}")
 
 Rake::TestTask.new do |t|
   t.libs << "lib"
@@ -6,12 +10,9 @@ Rake::TestTask.new do |t|
   t.verbose = true
 end
 
-task :clean do
-  sh 'rm -f *.gem'
-end
-
-task :build do
-  sh 'gem build *.gemspec' if Dir.glob('*.gem').empty?
+Rake::PackageTask.new(gemspec.name, gemspec.version.to_s) do |pkg|
+  pkg.need_tar_bz2 = pkg.need_zip = true
+  pkg.package_files = gemspec.files
 end
 
 task :install => [:build] do
