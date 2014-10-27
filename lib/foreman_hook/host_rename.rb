@@ -187,8 +187,11 @@ module ForemanHook
       raise 'new_name is nil' if @rec['host']['name'].nil?
       cmd = @rename_hook_command + ' ' + @old_name + ' ' + @rec['host']['name']
       debug "Running the rename hook action: #{cmd}"
-      rc = system cmd
-      warn 'The rename hook returned a non-zero status code' unless rc
+      open('|' + cmd, 'w+') do |subprocess|
+        subprocess.write @rec.to_json
+      end
+      rc = $?.exitstatus
+      warn "Hook exited with status #{rc}" if rc != 0
     end
     
     def parse_hook_data
@@ -255,7 +258,7 @@ module ForemanHook
         next if File.exist? hook
         f = File.open(hook, 'w')
         f.puts '#!/bin/sh'
-        f.puts 'scl enable ruby193 "/usr/bin/foreman_hook-host_rename $*"'
+        f.puts 'exec scl enable ruby193 "/usr/bin/foreman_hook-host_rename $*"'
         f.close
         File.chmod 0755, hook
       end

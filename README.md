@@ -42,8 +42,7 @@ foreman_user, foreman_password
 
 rename_hook_command
 
-  The command to run after a host is renamed. Two variables will be passed into the
-  command via ARGV: 
+  The command to run after a host is renamed. A JSON object will be passed in via STDIN, and two parameters will be set in ARGV:
     1. the old hostname, as a FQDN
     2. the new hostname, as a FQDN
 
