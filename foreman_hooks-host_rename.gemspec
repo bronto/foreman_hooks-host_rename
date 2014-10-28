@@ -16,8 +16,8 @@ Gem::Specification.new do |s|
     s.add_runtime_dependency dep
   end
 
-  s.add_development_dependency "bundler", "~> 1.7"
-  s.add_development_dependency "rake", "~> 10.0"
+  s.add_development_dependency "bundler"
+  s.add_development_dependency "rake"
 
   # If you need to check in files that aren't .rb files, add them here
   s.files        = Dir[

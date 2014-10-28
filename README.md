@@ -1,4 +1,4 @@
-foreman_hook-host_rename
+foreman_hooks-host_rename
 ===================
 
 This hook is designed to extend the Foreman Hooks mechanism to detect when a host 
@@ -53,7 +53,7 @@ Uninstallation
 
 To remove the hook, perform the following steps:
 
-1. Run 'sudo foreman_hook-host_rename --uninstall' to unregister the hook with
+1. Run 'sudo foreman_hooks-host_rename --uninstall' to unregister the hook with
    Foreman.
 
 2. Restart Apache via 'sudo service httpd restart'
