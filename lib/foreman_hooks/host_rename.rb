@@ -55,8 +55,8 @@ module ForemanHook
       # Parse the configuration file
       config = {
           hook_user: 'foreman',
-          database_path: prefix + '/db/foreman_hook_rename.db',
-          log_path: '/var/tmp/foreman_hook_rename.log',
+          database_path: '/var/tmp/db/foreman_hooks-host_rename.db',
+          log_path: '/var/tmp/foreman_hooks-host_rename.log',
           log_level: 'warn',
           rename_hook_command: '/bin/true',
       }.merge(symbolize(YAML.load(File.read(conffile))))
