@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   # Dependencies
   s.required_ruby_version = '>= 1.9.3'
-  %w(minitest json sqlite3 rest_client kwalify).each do |dep| 
+  %w(foreman_hooks minitest json sqlite3 rest_client kwalify).each do |dep| 
     s.add_runtime_dependency dep
   end
 
