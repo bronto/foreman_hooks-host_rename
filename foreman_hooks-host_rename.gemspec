@@ -1,12 +1,12 @@
-require File.expand_path("../lib/foreman_hook/version", __FILE__)
+require File.expand_path("../lib/foreman_hooks/host_rename/version", __FILE__)
 
 Gem::Specification.new do |s|
-  s.name        = "foreman_hook-host_rename"
-  s.version     = ForemanHook::VERSION
+  s.name        = "foreman_hooks-host_rename"
+  s.version     = ForemanHooks::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Mark Heily", "Bronto Software, Inc."]
   s.email       = ["mark.heily@bronto.com"]
-  s.homepage    = "https://github.com/bronto/foreman_hook-host_rename"
+  s.homepage    = "https://github.com/bronto/foreman_hooks-host_rename"
   s.summary     = "Foreman hook that fires when a host is renamed"
   s.description = "See the README for details"
 
@@ -26,6 +26,6 @@ Gem::Specification.new do |s|
 	] + Dir.glob("{bin,lib}/**/*")
   s.require_path = 'lib'
 
-  s.executables = ["foreman_hook-host_rename"]
+  s.executables = ["foreman_hooks-host_rename"]
 
 end

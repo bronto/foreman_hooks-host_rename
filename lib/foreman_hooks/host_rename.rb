@@ -48,7 +48,7 @@ module ForemanHook
     # Parse the configuration file
     def parse_config(conffile = nil)
       conffile ||= Dir.glob([
-	  "/etc/foreman_hook-host_rename/settings.yaml",
+	  "/etc/foreman_hooks-host_rename/settings.yaml",
 	  "#{confdir}/settings.yaml"])[0]
       raise "Could not locate the configuration file" if conffile.nil?
     
@@ -258,11 +258,11 @@ module ForemanHook
         next if File.exist? hook
         f = File.open(hook, 'w')
         f.puts '#!/bin/sh'
-        f.puts 'exec scl enable ruby193 "/usr/bin/foreman_hook-host_rename $*"'
+        f.puts 'exec scl enable ruby193 "/usr/bin/foreman_hooks-host_rename $*"'
         f.close
         File.chmod 0755, hook
       end
-      sysconfdir = '/etc/foreman_hook-host_rename'
+      sysconfdir = '/etc/foreman_hooks-host_rename'
       Dir.mkdir sysconfdir unless File.exist? sysconfdir
       puts 'The hook has been installed. Please restart Apache to activate the hook.'
     end

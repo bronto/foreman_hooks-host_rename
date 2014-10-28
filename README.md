@@ -15,17 +15,17 @@ This hook has only been tested in the following environment:
 Installation
 ============
 
-1. Install the gem as root, using the Ruby 1.9 install location:
-
-      sudo scl enable ruby193 'gem install foreman_hook-host_rename'
-
-2. Create a configuration file in /etc/foreman_hook-host_rename/settings.yaml.
-   See the 'Configuration' section for details.
-
-3. Run 'sudo foreman_hook-host_rename --install' to register the hook with
-   Foreman.
-
-4. Restart Apache via 'sudo service httpd restart'
+  1. Install the gem as root, using the Ruby 1.9 install location:
+  
+        sudo scl enable ruby193 'gem install foreman_hooks-host_rename'
+  
+  2. Create a configuration file in /etc/foreman_hooks-host_rename/settings.yaml.
+     See the 'Configuration' section for details.
+  
+  3. Run 'sudo foreman_hooks-host_rename --install' to register the hook with
+     Foreman.
+  
+  4. Restart Apache via 'sudo service httpd restart'
 
 Configuration
 =============
