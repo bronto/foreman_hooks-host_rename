@@ -28,7 +28,7 @@ require 'stringio'
 require 'tempfile'
 
 class TestMain < MiniTest::Unit::TestCase
-  require_relative '../lib/foreman_hook/host_rename'
+  require_relative '../lib/foreman_hooks/host_rename'
 
   # Wipe the database and reinitialize it
   def test_initialize_database

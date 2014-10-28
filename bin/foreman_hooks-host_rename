@@ -3,7 +3,7 @@
 
 require 'optparse'
 require 'ostruct'
-require 'foreman_hook/host_rename'
+require 'foreman_hooks/host_rename'
 
 action = :run
 options = OpenStruct.new
