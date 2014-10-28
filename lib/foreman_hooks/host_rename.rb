@@ -187,7 +187,7 @@ module ForemanHook
       raise 'new_name is nil' if @rec['host']['name'].nil?
       cmd = @rename_hook_command + ' ' + @old_name + ' ' + @rec['host']['name']
       debug "Running the rename hook action: #{cmd}"
-      open("| #{ cmd } > #{ @log_path } 2>&1", 'w+') do |subprocess|
+      open("| #{ cmd } >> #{ @log_path } 2>&1", 'w+') do |subprocess|
         subprocess.write @rec.to_json
       end
       rc = $?.exitstatus
