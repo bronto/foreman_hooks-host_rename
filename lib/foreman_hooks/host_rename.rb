@@ -154,7 +154,8 @@ module ForemanHook
         params = [id, name]
       when 'update'
         # Check if we are renaming the host
-        @old_name = @db.get_first_row('select name from host where id = ?', id)[0]
+        @old_name = @db.get_first_row('select name from host where id = ?', id)
+        @old_name = @old_name[0] unless @old_name.nil?
         if @old_name.nil?
           warn 'received an update for a non-existent host'
         else
