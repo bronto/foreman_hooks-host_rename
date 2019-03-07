@@ -1,6 +1,8 @@
 foreman_hooks-host_rename
 ===================
 
+**This project is no longer maintained and should be used for historical purposes only.**
+
 This hook is designed to extend the Foreman Hooks mechanism to detect when a host 
 has been renamed and fire a custom 'rename' hook.
 
